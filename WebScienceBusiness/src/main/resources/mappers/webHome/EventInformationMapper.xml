@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lamd.dao.mapper.webHome.EventInformationMapper" >
+   <select id="selEventTerOneHunder" parameterType="com.lamd.api.io.modules.webHome.UserIdIO" resultType="com.lamd.api.result.modules.publicHome.EventInformationResult">
+        select e.event_id,e.event_teId,e.event_seId,e.event_time,e.event_state,e.event_type,
+       t.terminal_name,s.sensor_type,s.sensor_name,a.area_name,p.province_name,c.city_name,i.interval_name
+       from tb_event e,tb_interval i, tb_terminal  t,tb_sensor s, tb_province p,tb_city c, tb_area a , tb_user2te us
+       where s.sensor_inId=i.interval_id and t.terminal_pId = p.province_id and t.terminal_cId = c.city_id
+       and t.terminal_aId = a.area_id  and e.event_seId = s.sensor_seId and e.event_teId = t.terminal_teId
+       and t.terminal_teId = s.sensor_teId and us.user2te_teId = t.terminal_teId
+       and event_teId in
+       (SELECT t.terminal_teId FROM tb_terminal t,tb_user2te us
+       WHERE t.terminal_teId = us.user2te_teId AND us.user2te_userId = #{userid})
+        and us.user2te_userId = #{userid}
+        order by e.event_state  desc , e.event_time desc  limit 100;
+   </select>
+
+</mapper>

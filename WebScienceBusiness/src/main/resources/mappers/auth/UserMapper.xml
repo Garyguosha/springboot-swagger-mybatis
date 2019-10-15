@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lamd.dao.mapper.auth.UserMapper" >
+    <select id="selUser" parameterType="com.lamd.api.io.modules.auth.UserIO" resultType="int">
+        SELECT
+          tb_user.user_id
+        FROM
+          tb_user
+        WHERE tb_user.user_name = #{user} AND tb_user.user_password = #{password}
+    </select>
+
+</mapper>

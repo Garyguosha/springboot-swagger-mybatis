@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lamd.dao.mapper.therllmager.BseMapper" >
+
+    <select id="selBse" resultType="com.lamd.dao.entity.thermallmager.BseModel" parameterType="com.lamd.api.io.modules.thermallmager.BseIO">
+        SELECT
+        tb_bsedata.bsedata_teId,
+        tb_bsedata.bsedata_seId,
+        tb_bsedata.bsedata_data,
+        tb_bsedata.bsedata_time
+        FROM
+        tb_bsedata
+        WHERE tb_bsedata.bsedata_seId = #{seId} AND tb_bsedata.bsedata_teId = #{teId}
+
+    </select>
+    <select id="findSensorType" resultType="java.lang.String" parameterType="com.lamd.api.io.modules.thermallmager.SensorTypeIO">
+        SELECT
+            tb_sensor.sensor_type
+        FROM
+          tb_sensor
+        WHERE sensor_teId = #{teId} AND sensor_seId = #{seId}
+    </select>
+
+</mapper>

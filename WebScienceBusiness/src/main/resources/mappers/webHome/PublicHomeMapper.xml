@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lamd.dao.mapper.webHome.PublicHomeMapper" >
+    <select id="selCountTerminal" parameterType="com.lamd.api.io.modules.webHome.UserIdIO" resultType="com.lamd.api.result.modules.publicHome.TerminalDataResult">
+        SELECT COUNT(tb_terminal.terminal_teId) as total,sum(CASE WHEN tb_terminal.terminal_state = 1 THEN 1 ELSE 0 END) as con,
+        sum(CASE WHEN tb_terminal.terminal_state = 0 THEN 1 ELSE 0 END) as ncon FROM tb_terminal,tb_user2te
+        WHERE tb_user2te.user2te_teId =tb_terminal.terminal_teId AND tb_user2te.user2te_userId = #{userid};
+    </select>
+
+    <select id="selNumbleEvent" parameterType="com.lamd.api.io.modules.webHome.UserIdIO" resultType="com.lamd.api.result.modules.publicHome.EventDataResult">
+        SELECT COUNT(tb_event.event_teId) as total,sum(CASE WHEN tb_event.event_state = 0 THEN 1 ELSE 0 END) as alr,
+        sum(CASE WHEN tb_event.event_state = 1 THEN 1 ELSE 0 END) as noy FROM tb_event,tb_user2te
+        WHERE tb_user2te.user2te_teId =tb_event.event_teId AND tb_user2te.user2te_userId = #{userid};
+    </select>
+
+    <select id="selTerminalAll" parameterType="com.lamd.api.io.modules.webHome.UserIdIO" resultType="com.lamd.api.result.modules.publicHome.TerminalResult">
+       SELECT d.terminal_teId,d.terminal_name,d.terminal_state,d.terminal_latitude,d.terminal_longitude,c.e_count,b.i_count,a.s_count
+        FROM
+        (SELECT t.terminal_teId ,COUNT(se.sensor_teId) AS s_count
+        FROM tb_terminal t,tb_sensor se, tb_user2te us
+        WHERE us.user2te_teId = t.terminal_teId AND t.terminal_teId = se.sensor_teId AND us.user2te_userId = #{userid}
+        GROUP BY t.terminal_teId) AS a
+        INNER JOIN
+        (SELECT t.terminal_teId , COUNT(i.interval_teId) AS i_count
+        FROM tb_terminal t,tb_interval i,tb_user2te us
+        WHERE us.user2te_teId = t.terminal_teId AND t.terminal_teId = i.interval_teId AND us.user2te_userId = #{userid}
+        GROUP BY t.terminal_teId) AS b
+        INNER JOIN
+        (SELECT t.terminal_teId ,COUNT(ev.event_teId) e_count
+        FROM tb_terminal t,tb_event ev,tb_user2te us
+        WHERE us.user2te_teId = t.terminal_teId AND t.terminal_teId = ev.event_teId AND ev.event_state = 1 AND us.user2te_userId = #{userid}
+        GROUP BY t.terminal_teId) AS c
+        INNER JOIN
+        (SELECT t.terminal_name,t.terminal_teId,t.terminal_state,t.terminal_latitude,t.terminal_longitude
+         FROM tb_terminal t,tb_user2te us
+        WHERE us.user2te_teId = t.terminal_teId AND us.user2te_userId = #{userid}) AS d
+        ON d.terminal_teId = c.terminal_teId AND d.terminal_teId = b.terminal_teId AND d.terminal_teId = a.terminal_teId
+    </select>
+
+    <select id="selTerEveryDaySum" parameterType="com.lamd.api.io.modules.webHome.UserIdIO" resultType="com.lamd.api.result.modules.publicHome.TerminalStatisticsResult">
+        SELECT date(tb_event.event_time) AS everyday_time,COUNT(tb_event.event_teId) AS e_count FROM tb_event,tb_user2te us
+        WHERE us.user2te_teId = tb_event.event_teId
+        AND DATEDIFF(tb_event.event_time,NOW()) > -30 AND DATEDIFF(tb_event.event_time,NOW()) &lt;= 0 AND us.user2te_userId = #{userid}
+        GROUP BY everyday_time order by everyday_time;
+    </select>
+
+    <select id="failureRateStatisticsMapper" parameterType="com.lamd.api.io.modules.webHome.UserIdIO" resultType="com.lamd.api.result.modules.publicHome.FailureRateStatisticsResult">
+        SELECT br.sensor_type,br.ev_count,ar.ev_countall
+		FROM
+        (SELECT se.sensor_type,COUNT(ev.event_teId) AS ev_count FROM tb_event ev,tb_user2te us,tb_sensor se
+        WHERE ev.event_teId = us.user2te_teId
+        AND se.sensor_teId = ev.event_teId AND se.sensor_seId = ev.event_seId AND
+        se.sensor_type in ("湿度传感器","温度传感器","TEV局放传感器") AND us.user2te_userId = #{userid}
+        GROUP BY se.sensor_type) br
+	    JOIN
+        (SELECT COUNT(ev.event_teId) AS ev_countall
+		FROM tb_event ev,tb_user2te us WHERE ev.event_teId = us.user2te_teId
+		AND us.user2te_userId = #{userid}) ar
+    </select>
+
+</mapper>
